@@ -1,0 +1,38 @@
+#! /usr/bin/env python
+
+import sys
+import time
+from scapy.all import *
+
+opports=[] #List for Open Ports
+clports=[] #List for CLosed Ports
+opfilports = []  #List for Open|Filtered Ports
+
+for destports in range(1,101): #Traaversing of the ports
+	ans= sr1(IP(dst = "10.10.111.1")/UDP (dport = destports),timeout=1,verbose =0) #Sendin the UDP packets
+	if (str( type(ans)) == "<type 'NoneType'>"): #Check if the answer is None type
+		time.sleep(2) #A sleep time of 2 seconds
+		ans= sr1(IP(dst = "10.10.111.1")/UDP (dport = destports),timeout=1,verbose =0) #resend the packet to the port
+		if (str( type(ans)) == "<type 'NoneType'>"): #If the reply is None again
+			opfilports.append(destports) #Classify as Open Filtered
+	elif (ans.haslayer(ICMP)): #Check for ICMP
+		if (int (ans.getlayer(ICMP).type==3 and int(ans.getlayer(ICMP).code==3)): #If the type is 3 and code 3
+			clports.append(destports) #Classify as Closed Ports
+		
+	elif (ans.haslayer(UDP)):#Check for UDP layer
+		opports.append(destports)# If yes classify as Open port
+	time.sleep(2)
+
+print "##########The open ports are: ###########"
+if len(opports)!=0:
+	for i in opports:
+		print "Port : " + str(i)
+print "##########The closed ports are: ###########"
+if len(clports)!=0:
+	for i in clports:
+		print "Port : " + str(i)
+print "##########The Open|Filtered ports are: ###########"
+if len(opfilports)!=0:
+	for i in opfilports:
+		print "Port : " + str(i)				
+		
